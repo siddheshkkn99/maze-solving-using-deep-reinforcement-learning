@@ -99,17 +99,29 @@ class Qmaze(object):
         if(self._maze[self.target]) == 0.0: raise Exception("Target Cell/Cheese cannot be blocked")
         if(not (rat in self.free_cells)): raise Exception("Agent/Rat not present in a free cell")
 
-        #resetting rats attributes for next try/iteration
+        #resetting rats attributes for new run
         self.reset(rat)
 
     # reset function for rat
     def reset(self, rat):
+        
+        #set rat attributes for current run
         self.rat = rat
         self.maze = np.copy(self._maze)
         nrows, ncols = self.maze.shape
         row, col = rat
+        
+        # marks color corresponding to rat(dark gray) on cell
         self.maze[row, col] = rat_mark
+        
+        # set the state of rat's current location
         self.state = (row, col, 'start')
+        
+        # min reward threshold which will loose the game if actual reward goes below this value
         self.min_reward = -0.5 * self.maze.size
-        self.total_reward = 0
+        
+        # resetting rat reward to 0
+        self.total_reward = 0 
+        
+        # change current cell to visited
         self.visited = set()
