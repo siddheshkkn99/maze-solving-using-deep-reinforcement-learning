@@ -102,7 +102,7 @@ class Qmaze(object):
         #resetting rats attributes for new run
         self.reset(rat)
 
-    # reset function for rat
+    # reset function of rat for the new run
     def reset(self, rat):
         
         #set rat attributes for current run
@@ -123,5 +123,5 @@ class Qmaze(object):
         # resetting rat reward to 0
         self.total_reward = 0 
         
-        # change current cell to visited
+        # initialise visited cell variableas a set() data structure
         self.visited = set()
