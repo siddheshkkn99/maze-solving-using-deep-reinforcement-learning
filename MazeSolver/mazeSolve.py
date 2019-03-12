@@ -15,9 +15,6 @@ from keras.optimizers import SGD , Adam, RMSprop
 from keras.layers.advanced_activations import PReLU
 import matplotlib.pyplot as plt
 
-# setting the backend of matplotlib to the 'inline' backend
-'exec(%matplotlib inline)'
-
 # ---------------------------------------------------------------------------------
 
 # developing a sample maze
