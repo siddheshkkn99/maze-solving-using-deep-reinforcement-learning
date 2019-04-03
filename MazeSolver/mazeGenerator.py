@@ -1,6 +1,3 @@
-import numpy as np
-import random
-
 class MazeGen:
     # constructor function
     def __init__(self,ncols,nrows):
@@ -14,11 +11,8 @@ class MazeGen:
         self.cheese=(ncols-1,nrows-1)
         
         # freeing rat and cheese cells
-        self.maze[self.rat]=1.0
-        self.maze[self.cheese]=1.0
-        
-        # storing all 
-        self.freeCells=set()
+        self.maze[self.rat]=1
+        self.maze[self.cheese]=1
 
     # function to make a move
     def act(self,move):
@@ -35,20 +29,18 @@ class MazeGen:
     def validAction(self):
         # all possible moves: left, right, up and down
         validActions=['l','r','u','d']
-        nrows,ncol=self.maze.shape
+        nrow,ncol=self.maze.shape
         row,col=self.rat
         if row==0: validActions.remove('u')
-        elif row==nrows-1: validActions.remove('d')
+        elif row==nrow-1: validActions.remove('d')
         if col==0: validActions.remove('l')
-        elif cols==ncols-1: validActions.remove('r')
+        elif col==ncol-1: validActions.remove('r')
         return validActions
 
     # function to traverse the maze randomly until target is reached
     def traverse(self):
-        while self.rat!=self.cheese:
-            currRow,currCol=self.rat
-            
-            # finding all pssible moves
+        while self.rat!=self.cheese :
+             # finding all valid moves possible
             actionList=self.validAction()
             if len(actionList)==0: return -1
             
@@ -56,15 +48,17 @@ class MazeGen:
             action=random.choice(actionList)
             self.act(action)
             
-            # adding newly visited cell to freed cell list
-            self.freeCells.add(self.rat)
+            # setting visited cells as freecells 
+            currRow,currCol=self.rat
+            self.maze[(currRow,currCol)]=1
             
     def getMaze(self):
         print("Generating maze ......")
         self.traverse()
-        print(self.freeCells)
+        nrow,ncol=self.maze.shape  
         return self.maze
-        
+
+print("Enter no of rows and columns of maze")
 nrow,ncol=map(int,input().split())
 newMaze=MazeGen(nrow,ncol)
 print(newMaze.getMaze())
