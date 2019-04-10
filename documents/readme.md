@@ -1,1 +1,1 @@
-This folder contains all the required documents
+Contains all the required documents
