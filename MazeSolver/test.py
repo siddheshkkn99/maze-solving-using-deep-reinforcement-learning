@@ -22,23 +22,8 @@ from mazeGenerator import *
 # the floating numbers also denote the color of the cell 1:white 0:black
 # the rat is starting at cell (0,0) (top-left cell) and the cheese is placed at cell (9,9)
 
-'''
-sample
-maze =  np.array([
-    [ 1.,  0.,  1.,  1.,  1.,  1.,  1.],
-    [ 1.,  1.,  1.,  0.,  0.,  1.,  0.],
-    [ 0.,  0.,  0.,  1.,  1.,  1.,  0.],
-    [ 1.,  1.,  1.,  1.,  0.,  0.,  1.],
-    [ 1.,  0.,  0.,  0.,  1.,  1.,  1.],
-    [ 1.,  0.,  1.,  1.,  1.,  1.,  1.],
-    [ 1.,  1.,  1.,  0.,  1.,  1.,  1.]
-])
-'''
 # generating sample 5X5 maze
 maze=MazeGen(5,5).getMaze()
-
-qmaze = Qmaze(maze)
-show(qmaze)
 # ----------------------------------------------------------------------------------
 
 # feeding sample maze to the program
