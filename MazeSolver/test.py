@@ -5,7 +5,7 @@
 from mazeSolve import *
 from mazeGenerator import *
 # ---------------------------------------------------------------------------------
-# generting a random maze in the form of an array with values 0(blocked cell) or 1(free cell)
+# generting a random 5X5 maze in the form of an array with values 0(blocked cell) or 1(free cell)
 maze=MazeGen(5,5).getMaze()
 # ----------------------------------------------------------------------------------
 '''
