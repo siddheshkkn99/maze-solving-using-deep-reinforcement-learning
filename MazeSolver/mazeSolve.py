@@ -1,47 +1,24 @@
-#prerequites
-
-# importing libraries and functions
 from __future__ import print_function
 from IPython import get_ipython
 import os, sys, time, datetime, json, random
 import numpy as np
-from keras.models import Sequential
-from keras.layers.core import Dense, Activation
-from keras.optimizers import SGD , Adam, RMSprop
-from keras.layers.advanced_activations import PReLU
-import matplotlib.pyplot as plt
-
-# ----------------------------------------------------------------------------------------------------------------------
-# setting up maze traversal constants
-
+from util import *
+# global constants
 # cells visited by agent marked gray (0.8)
 visited_mark = 0.8
 # cells where agent(rat) is currently present is marked dark gray (0.5)
 rat_mark = 0.5
-
 # We have exactly 4 actions the agent can perform which are moving  in 4 direction across the maze
-# left,right,up,down which we must encode as integers 0-3
 LEFT    = 0
 UP      = 1
 RIGHT   = 2
 DOWN    = 3
-# setting up a dictionary for these variables:
-actions_dict = \
-{
-    LEFT    : 'left',
-    UP      : 'up',
-    RIGHT   : 'right',
-    DOWN    : 'down',
-}
 # variable to hold no. of actions possible by agent
-num_actions = len(actions_dict)
-
+num_actions = 4
 # Exploration factor(epsilon): decides the probability that the agent will make a random move to discover new outcomes
 epsilon = 0.1
-# ----------------------------------------------------------------------------------------------------------------------
 
-# Qmark class: describes the behaviour and characteristics of the maze cells included the rat and cheese
-
+#----------------------------------------------------------------------------------------------------------------------
 # initial rat position and target cell will always be top left cell = rat(0,0) and bottom right = cheese(lr,lc)
 class Qmaze(object):
 
@@ -82,7 +59,7 @@ class Qmaze(object):
         nrows, ncols = self.maze.shape
         nrow, ncol, nmode = rat_row, rat_col, mode = self.state
         # mark visited cell
-        if self.maze[rat_row, rat_col] > 0.0: self.visited.add((rat_row, rat_col))  
+        if self.maze[rat_row, rat_col] > 0.0: self.visited.add((rat_row, rat_col))
         # making a valid move
         valid_actions = self.valid_actions()
         # if there is no valid actions then the agent is blocked
@@ -174,10 +151,9 @@ class Qmaze(object):
         if col < ncols - 1 and self.maze[row, col + 1] == 0.0   : actions.remove(2)
         return actions
 # ----------------------------------------------------------------------------------------------------------------------
+# ----------------------------------------------------------------------------------------------------------------------
 # Experience Class:This is the class in which we collect our game episodes (or game experiences) within a memory list
-
 # It takes the following parameters: a neural network, maximum memory ,and discount factor
-
 class Experience(object):
     def __init__(self, model, max_memory=100, discount=0.95):
         self.model = model
@@ -214,9 +190,9 @@ class Experience(object):
             else: targets[i, action] = reward + self.discount * Q_sa
         return inputs, targets
 # ----------------------------------------------------------------------------------------------------------------------
-# Q-Training: algorithm for training our neural network model to solve the maze
 
-# It takes the parameters: no of training epochs, max memory and data size
+# Q-Training: algorithm for training our neural network model to solve the maze
+# It takes the parameters: model, no of training epochs, max memory and data size
 def qtrain(model, maze, **opt):
     global epsilon
     n_epoch = opt.get('n_epoch', 15000)
@@ -315,8 +291,13 @@ def qtrain(model, maze, **opt):
     print('files: %s, %s' % (h5file, json_file))
     print("n_epoch: %d, max_mem: %d, data: %d, time: %s" % (epoch, max_memory, data_size, t))
     return seconds
-# ----------------------------------------------
-# Building a neural network model:
+# ----------------------------------------------------------------------------------------------------------------------
+# Building a neural network model using keras:
+
+from keras.models import Sequential
+from keras.layers.core import Dense, Activation
+from keras.optimizers import SGD , Adam, RMSprop
+from keras.layers.advanced_activations import PReLU
 
 def build_model(maze, lr=0.001):
     model = Sequential()
@@ -327,65 +308,4 @@ def build_model(maze, lr=0.001):
     model.add(Dense(num_actions))
     model.compile(optimizer='adam', loss='mse')
     return model
-# -------------------------------------------------------------------------------------------
-# Utility Functions:
-
-# This is a small utility for printing readable time strings:
-def format_time(seconds):
-    if seconds < 400:
-        s = float(seconds)
-        return "%.1f seconds" % (s,)
-    elif seconds < 4000:
-        m = seconds / 60.0
-        return "%.2f minutes" % (m,)
-    else:
-        h = seconds / 3600.0
-        return "%.2f hours" % (h,)
-
-# function to plot maze current state on canvas
-def show(qmaze):
-    # matplotlib commands to setup the environment
-    plt.grid('on')
-    nrows, ncols = qmaze.maze.shape
-    ax = plt.gca()
-    ax.set_xticks(np.arange(0.5, nrows, 1))
-    ax.set_yticks(np.arange(0.5, ncols, 1))
-    ax.set_xticklabels([])
-    ax.set_yticklabels([])
-    # copying maze to tkinter canvas for display
-    canvas = np.copy(qmaze.maze)
-    # marking visited cells with dark gray color(50%)
-    for row,col in qmaze.visited: canvas[row,col] = 0.6
-    rat_row, rat_col, _ = qmaze.state
-    # marking rat cell with very dark gray(30%)
-    canvas[rat_row, rat_col] = 0.3
-    # marking cheese cell with light gray(90%)
-    canvas[nrows-1, ncols-1] = 0.9
-    # plotting canvas
-    img = plt.imshow(canvas, interpolation='none', cmap='gray')
-    return img
-
-# function to play the game, it takes 3 arguments: model,maze and the rat position
-def play_game(model, qmaze, rat_cell):
-    # reset rat state for new game/iteration
-    qmaze.reset(rat_cell)
-    envstate = qmaze.observe()
-    while True:
-        prev_envstate = envstate
-        # get next action
-        q = model.predict(prev_envstate)
-        action = np.argmax(q[0])
-        # apply action, get rewards and new state
-        envstate, reward, game_status = qmaze.act(action)
-        if   game_status == 'win' : return True
-        elif game_status == 'lose': return False
-
-#  simulate all possible games and check if our model wins them all( not optimal for large mazes)
-def completion_check(model, qmaze):
-    for cell in qmaze.free_cells:
-        if not qmaze.valid_actions(cell): return False
-        if not play_game(model, qmaze, cell): return False
-    return True
-
-
-
+# ----------------------------------------------------------------------------------------------------------------------
