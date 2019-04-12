@@ -3,6 +3,7 @@ from IPython import get_ipython
 import os, sys, time, datetime, json, random
 import numpy as np
 from util import *
+
 # global constants
 # cells visited by agent marked gray (0.8)
 visited_mark = 0.8
