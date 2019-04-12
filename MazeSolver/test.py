@@ -5,10 +5,8 @@
 from mazeSolve import *
 from mazeGenerator import *
 # ---------------------------------------------------------------------------------
-# developing a sample maze in the form of an array with values 0(blocked cell) or 1(free cell)
-print("Enter no. of rows and columns in maze")
-nrows,ncols = map(int,input().split())
-maze=MazeGen(nrows,ncols).getMaze()
+# generting a random maze in the form of an array with values 0(blocked cell) or 1(free cell)
+maze=MazeGen(5,5).getMaze()
 # ----------------------------------------------------------------------------------
 '''
 # sample maze
