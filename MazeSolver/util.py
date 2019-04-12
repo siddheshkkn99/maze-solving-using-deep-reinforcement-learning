@@ -3,7 +3,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-
 # This is a small utility for printing readable time strings:
 def format_time(seconds):
     if seconds < 400:
@@ -55,7 +54,7 @@ def play_game(model, qmaze, rat_cell):
         if   game_status == 'win' : return True
         elif game_status == 'lose': return False
 
-#  simulate all possible games and check if our model wins them all( not optimal for large mazes)
+# simulate all possible games and check if our model wins them all( not optimal for large mazes)
 def completion_check(model, qmaze):
     for cell in qmaze.free_cells:
         if not qmaze.valid_actions(cell): return False

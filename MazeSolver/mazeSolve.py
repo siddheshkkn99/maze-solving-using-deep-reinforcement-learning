@@ -6,39 +6,24 @@ from util import *
 
 # global constants
 # cells visited by agent marked gray (0.8)
-visited_mark = 0.8
-# cells where agent(rat) is currently present is marked dark gray (0.5)
-rat_mark = 0.5
+visited_mark,rat_mark = 0.8,0.5
 # We have exactly 4 actions the agent can perform which are moving  in 4 direction across the maze
-LEFT    = 0
-UP      = 1
-RIGHT   = 2
-DOWN    = 3
-# variable to hold no. of actions possible by agent
-num_actions = 4
+LEFT,UP,RIGHT,DOWN,num_actions = 0,1,2,3,4
 # Exploration factor(epsilon): decides the probability that the agent will make a random move to discover new outcomes
 epsilon = 0.1
 
-#----------------------------------------------------------------------------------------------------------------------
 # initial rat position and target cell will always be top left cell = rat(0,0) and bottom right = cheese(lr,lc)
 class Qmaze(object):
-
     # constructor function
-    def __init__(self, _maze, rat=(0,0)):# initialises rat location to (0,0) which is its starting default location
-        # the maze nparray is added as another nparray
+    def __init__(self, _maze, rat=(0,0)):
         self._maze = np.array(_maze)
-        # no.of rows and column will be calculated using shape function of numpy library
         nrows, ncols = self._maze.shape
-        # target cell (cheese) is set as the right corner cell by default
         self.target = (nrows-1, ncols-1)
-        #free_cells is a list containing coordinates of all free cells and removing target cell from it
-        # because target cell is a special case and cannot be considered as a ordinary free cell
         self.free_cells = [(r, c) for r in range(nrows) for c in range(ncols) if(self._maze[r, c] == 1.0)]
         self.free_cells.remove(self.target)
         # raising exception in cases where rat goes to a blocked cell or outside maze OR if target is blocked
         if(self._maze[self.target]) == 0.0: raise Exception("Target Cell/Cheese cannot be blocked")
         if(not (rat in self.free_cells)): raise Exception("Agent/Rat not present in a free cell")
-        #resetting rats attributes for next try/iteration
         self.reset(rat)
 
     # reset function for rat
@@ -151,10 +136,8 @@ class Qmaze(object):
         if col > 0         and self.maze[row, col - 1] == 0.0   : actions.remove(0)
         if col < ncols - 1 and self.maze[row, col + 1] == 0.0   : actions.remove(2)
         return actions
-# ----------------------------------------------------------------------------------------------------------------------
-# ----------------------------------------------------------------------------------------------------------------------
+
 # Experience Class:This is the class in which we collect our game episodes (or game experiences) within a memory list
-# It takes the following parameters: a neural network, maximum memory ,and discount factor
 class Experience(object):
     def __init__(self, model, max_memory=100, discount=0.95):
         self.model = model
@@ -190,37 +173,23 @@ class Experience(object):
             # reward + gamma * max_a' Q(s', a')
             else: targets[i, action] = reward + self.discount * Q_sa
         return inputs, targets
-# ----------------------------------------------------------------------------------------------------------------------
 
 # Q-Training: algorithm for training our neural network model to solve the maze
-# It takes the parameters: model, no of training epochs, max memory and data size
 def qtrain(model, maze, **opt):
     global epsilon
     n_epoch = opt.get('n_epoch', 15000)
     max_memory = opt.get('max_memory', 1000)
     data_size = opt.get('data_size', 50)
-    weights_file = opt.get('weights_file', "")
     name = opt.get('name', 'model')
     start_time = datetime.datetime.now()
-
-    # If you want to continue training from a previous model,
-    # just supply the h5 file name to weights_file option
-    if weights_file:
-        print("loading weights from file: %s" % (weights_file,))
-        model.load_weights(weights_file)
-
     # Construct environment/game from numpy array: maze (see above)
     qmaze = Qmaze(maze)
-
     # Initialize experience replay object
     experience = Experience(model, max_memory=max_memory)
-
     win_history = []  # history of win/lose game
     n_free_cells = len(qmaze.free_cells)
     hsize = qmaze.maze.size // 2  # history window size
     win_rate = 0.0
-    imctr = 1
-
     for epoch in range(n_epoch):
         loss = 0.0
         rat_cell = random.choice(qmaze.free_cells)
@@ -247,8 +216,7 @@ def qtrain(model, maze, **opt):
             elif game_status == 'lose':
                 win_history.append(0)
                 game_over = True
-            else:
-                game_over = False
+            else: game_over = False
 
             # Store episode (experience)
             episode = [prev_envstate, action, reward, envstate, game_over]
@@ -257,17 +225,10 @@ def qtrain(model, maze, **opt):
 
             # Train neural network model
             inputs, targets = experience.get_data(data_size=data_size)
-            h = model.fit(
-                inputs,
-                targets,
-                epochs=8,
-                batch_size=16,
-                verbose=0,
-            )
+            h = model.fit(inputs,targets,epochs=8,batch_size=16,verbose=0,)
             loss = model.evaluate(inputs, targets, verbose=0)
 
         if len(win_history) > hsize: win_rate = sum(win_history[-hsize:]) / hsize
-
         dt = datetime.datetime.now() - start_time
         t = format_time(dt.total_seconds())
         template = "Epoch: {:03d}/{:d} | Loss: {:.4f} | Episodes: {:d} | Win count: {:d} | Win rate: {:.3f} | time: {}"
@@ -278,35 +239,10 @@ def qtrain(model, maze, **opt):
         if sum(win_history[-hsize:]) == hsize and completion_check(model, qmaze):
             print("Reached 100%% win rate at epoch: %d" % (epoch,))
             break
-
-    # Save trained model weights and architecture, this will be used by the visualization code
-    h5file = name + ".h5"
-    json_file = name + ".json"
-    model.save_weights(h5file, overwrite=True)
-    with open(json_file, "w") as outfile:
-        json.dump(model.to_json(), outfile)
     end_time = datetime.datetime.now()
     dt = datetime.datetime.now() - start_time
     seconds = dt.total_seconds()
     t = format_time(seconds)
-    print('files: %s, %s' % (h5file, json_file))
     print("n_epoch: %d, max_mem: %d, data: %d, time: %s" % (epoch, max_memory, data_size, t))
     return seconds
-# ----------------------------------------------------------------------------------------------------------------------
-# Building a neural network model using keras:
-
-from keras.models import Sequential
-from keras.layers.core import Dense, Activation
-from keras.optimizers import SGD , Adam, RMSprop
-from keras.layers.advanced_activations import PReLU
-
-def build_model(maze, lr=0.001):
-    model = Sequential()
-    model.add(Dense(maze.size, input_shape=(maze.size,)))
-    model.add(PReLU())
-    model.add(Dense(maze.size))
-    model.add(PReLU())
-    model.add(Dense(num_actions))
-    model.compile(optimizer='adam', loss='mse')
-    return model
 # ----------------------------------------------------------------------------------------------------------------------
